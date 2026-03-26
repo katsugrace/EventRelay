@@ -1,0 +1,20 @@
+triggers:
+  gitlab_pipeline_failed:
+    path: /pb/gitlab/pipeline
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+
+      - field: object_attributes.status
+        equals: failed
+
+      - field: object_attributes.name
+        equals: test
+
+    message:
+      text: "❌ Pipeline failed: {object_attributes.web_url}"
+
+    notify:
+      telegram:
+        - chat_id: 12345678

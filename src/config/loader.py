@@ -35,3 +35,6 @@ class Config:
 
     def get_all_paths(self) -> List[str]:
         return list(self._path_index.keys())
+
+    def get_notify(self) -> str:
+        return self._config.notify

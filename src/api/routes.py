@@ -1,24 +1,25 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from typing import Dict
 from src.config.models import Trigger
 from src.filters.engine import TriggerEngine
-from pydantic import BaseModel
+from src.notifiers.base import Notifier
 
 
-class EmptyBody(BaseModel):
-    pass
-
-
-def register_routes(app: FastAPI, triggers: Dict[str, Trigger]):
+def register_routes(
+        app: FastAPI,
+        triggers: Dict[str, Trigger],
+        notifier: Notifier):
     for name, trigger in triggers.items():
         engine = TriggerEngine(trigger)
 
         for method in trigger.methods:
             async def _endpoint(body: Dict):
                 if not engine.check(body):
-                    return {'status': 'skipped'}
+                    notifier.skip(message=f'Trigger {name} skipped')
+                    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-                return {'status': 'ok'}
+                notifier.send(message=f'Trigger {name} fired')
+                return Response(status_code=status.HTTP_204_NO_CONTENT)
 
             _endpoint.__name__ = f'{name}_{method.lower()}'
             app.add_api_route(

@@ -7,7 +7,7 @@ class BaseFilter:
 
     def get_value(self, data: dict):
         value = data
-        for key in self.field.split("."):
+        for key in self.field.split('.'):
             if not isinstance(value, dict):
                 return None
             value = value.get(key)

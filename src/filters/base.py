@@ -6,13 +6,13 @@ class BaseFilter:
         self.field = field
 
     def get_value(self, data: dict):
-        keys = self.field.split('.')
         value = data
-
-        for key in keys:
+        for key in self.field.split("."):
             if not isinstance(value, dict):
                 return None
             value = value.get(key)
+            if value is None:
+                return None
 
         return value
 

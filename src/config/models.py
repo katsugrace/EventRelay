@@ -25,6 +25,8 @@ class Trigger(BaseModel):
     message: Message
     notify: Notify
     name: Optional[str] = None
+    methods: Optional[List[str]] = ['POST']
+    tags: Optional[List[str]] = None
 
 
 class AppConfig(BaseModel):

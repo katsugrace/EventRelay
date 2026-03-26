@@ -1,18 +1,11 @@
-from config.loader import Config
-from args import parse_args
+from fastapi import FastAPI
+from src.api.routes import register_routes
+from src.config.loader import Config
+from src.env import EnvConfig
 
 
-def main():
-    args = parse_args()
+app = FastAPI(title='Event Relay API')
+env = EnvConfig()
+config = Config(env.config)
 
-    config = Config(args.config)
-    triggers = config.get_triggers_by_path('/pb/gitlab/pipeline')
-
-    for t in triggers:
-        print('Trigger:', t.name)
-        print('Message template:', t.message.text)
-        print('Notify:', t.notify)
-
-
-if __name__ == '__main__':
-    main()
+register_routes(app, config.get_all_triggers())

@@ -1,6 +1,11 @@
 triggers:
   gitlab_pipeline_failed:
+    name: GitLab Pipeline Failed
+    active: true
+    description: Отправка уведомлений при падении пайплайна
     path: /pb/gitlab/pipeline
+    methods: [POST]
+    tags: [GitLab]
 
     filters:
       - field: object_kind

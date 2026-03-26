@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from typing import Dict
 from src.config.models import Trigger
+from src.filters.engine import TriggerEngine
 from pydantic import BaseModel
 
 
@@ -10,9 +11,14 @@ class EmptyBody(BaseModel):
 
 def register_routes(app: FastAPI, triggers: Dict[str, Trigger]):
     for name, trigger in triggers.items():
+        engine = TriggerEngine(trigger)
+
         for method in trigger.methods:
-            async def _endpoint(body: EmptyBody):
-                return {"status": "ok"}
+            async def _endpoint(body: dict):
+                if not engine.check(body):
+                    return {'status': 'skipped'}
+
+                return {'status': 'ok'}
 
             _endpoint.__name__ = f'{name}_{method.lower()}'
             app.add_api_route(

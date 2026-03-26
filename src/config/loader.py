@@ -2,7 +2,7 @@ import yaml
 from pathlib import Path
 from typing import List, Dict
 
-from config.models import AppConfig, Trigger
+from src.config.models import AppConfig, Trigger
 
 
 class Config:
@@ -32,3 +32,6 @@ class Config:
 
     def get_triggers_by_path(self, path: str) -> List[Trigger]:
         return self._path_index.get(path, [])
+
+    def get_all_paths(self) -> List[str]:
+        return list(self._path_index.keys())

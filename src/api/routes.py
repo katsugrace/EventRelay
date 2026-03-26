@@ -14,7 +14,7 @@ def register_routes(app: FastAPI, triggers: Dict[str, Trigger]):
         engine = TriggerEngine(trigger)
 
         for method in trigger.methods:
-            async def _endpoint(body: dict):
+            async def _endpoint(body: Dict):
                 if not engine.check(body):
                     return {'status': 'skipped'}
 

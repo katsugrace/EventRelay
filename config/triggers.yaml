@@ -1,3 +1,4 @@
+notify: mock
 triggers:
   gitlab_pipeline_failed:
     name: GitLab Pipeline Failed

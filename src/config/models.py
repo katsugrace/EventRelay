@@ -30,4 +30,5 @@ class Trigger(BaseModel):
 
 
 class AppConfig(BaseModel):
+    notify: str
     triggers: Dict[str, Trigger]

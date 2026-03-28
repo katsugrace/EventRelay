@@ -3,7 +3,8 @@ from src.config.models import NotifierConfig
 from typing import Dict
 
 
-def build_notifiers(notifiers_config: Dict[str, NotifierConfig]) -> Dict[str, object]:
+def build_notifiers(
+        notifiers_config: Dict[str, NotifierConfig]) -> Dict[str, object]:
     result = {}
     for name, cfg in notifiers_config.items():
         kwargs = {}

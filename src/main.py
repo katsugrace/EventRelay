@@ -1,17 +1,19 @@
 from fastapi import FastAPI
-from src.api.routes import register_routes
+from dotenv import load_dotenv
 from src.config.loader import Config
 from src.env import EnvConfig
-from src.notifiers.factory import NotifierFactory
+from src.api.routes import register_routes
+from src.notifiers.builder import build_notifiers
 
+load_dotenv()
 
 app = FastAPI(title='Event Relay API')
 env = EnvConfig()
 config = Config(path=env.config)
-notifier = NotifierFactory.create(name=config.get_notify())
+notifiers = build_notifiers(config.get_notifiers())
 
 register_routes(
-  app=app,
-  triggers=config.get_all_triggers(),
-  notifier=notifier
+    app=app,
+    triggers=config.get_all_triggers(),
+    notifiers=notifiers
 )

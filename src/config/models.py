@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Dict, Optional
+import os
 
 
 class Filter(BaseModel):
@@ -11,24 +12,30 @@ class Message(BaseModel):
     text: str
 
 
-class TelegramNotify(BaseModel):
-    chat_id: int
+class NotifierConfig(BaseModel):
+    type: str
+    token_env: Optional[str] = None
+    chat_ids: Optional[List[int]] = None
 
-
-class Notify(BaseModel):
-    telegram: Optional[List[TelegramNotify]] = None
+    def get_token(self):
+        if self.token_env:
+            token = os.getenv(self.token_env)
+            if not token:
+                raise ValueError(f'ENV variable "{self.token_env}" is not set')
+            return token
+        return None
 
 
 class Trigger(BaseModel):
     path: str
     filters: List[Filter]
     message: Message
-    notify: Notify
+    notify: List[str]
     name: Optional[str] = None
     methods: Optional[List[str]] = ['POST']
     tags: Optional[List[str]] = None
 
 
 class AppConfig(BaseModel):
-    notify: str
+    notifiers: Dict[str, NotifierConfig]
     triggers: Dict[str, Trigger]

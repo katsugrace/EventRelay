@@ -7,10 +7,10 @@ class MockNotifier(Notifier):
         self.sent: List[str] = []
         self.skipped: List[str] = []
 
-    def send(self, message: str) -> None:
+    async def send(self, message: str) -> None:
         print(f'[MockNotifier] send: {message}')
         self.sent.append(message)
 
-    def skip(self, message: str) -> None:
+    async def skip(self, message: str) -> None:
         print(f'[MockNotifier] skip: {message}')
         self.skipped.append(message)

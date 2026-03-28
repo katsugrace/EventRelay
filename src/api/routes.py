@@ -20,9 +20,10 @@ def register_routes(
                         await notifier.skip(message=f'Trigger {name} skipped')
                     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+                message = trigger.message.text.format(**body)
                 for notifier_name in trigger.notify:
                     notifier = notifiers[notifier_name]
-                    await notifier.send(message='TEST')
+                    await notifier.send(message=message)
 
                 return Response(status_code=status.HTTP_204_NO_CONTENT)
 

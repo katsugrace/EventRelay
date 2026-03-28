@@ -27,7 +27,7 @@ triggers:
         equals: test
 
     message:
-      text: "❌ Pipeline failed: {object_attributes.web_url}"
+      text: "❌ Pipeline failed: {object_attributes[web_url]}"
 
     notify:
       - main

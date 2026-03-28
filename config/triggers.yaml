@@ -1,4 +1,12 @@
-notify: mock
+notifiers:
+  main:
+    type: telegram
+    token_env: TELEGRAM_API
+    chat_ids: [1]
+
+  mock:
+    type: mock
+
 triggers:
   gitlab_pipeline_failed:
     name: GitLab Pipeline Failed
@@ -22,5 +30,5 @@ triggers:
       text: "❌ Pipeline failed: {object_attributes.web_url}"
 
     notify:
-      telegram:
-        - chat_id: 12345678
+      - main
+      - mock

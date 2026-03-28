@@ -1,8 +1,7 @@
 import yaml
 from pathlib import Path
 from typing import List, Dict
-
-from src.config.models import AppConfig, Trigger
+from src.config.models import AppConfig, Trigger, NotifierConfig
 
 
 class Config:
@@ -13,7 +12,7 @@ class Config:
         self.load()
 
     def load(self):
-        with open(self.path, "r") as f:
+        with open(self.path, 'r') as f:
             raw = yaml.safe_load(f)
 
         self._config = AppConfig(**raw)
@@ -36,5 +35,5 @@ class Config:
     def get_all_paths(self) -> List[str]:
         return list(self._path_index.keys())
 
-    def get_notify(self) -> str:
-        return self._config.notify
+    def get_notifiers(self) -> Dict[str, NotifierConfig]:
+        return self._config.notifiers

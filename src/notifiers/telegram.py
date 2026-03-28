@@ -3,16 +3,24 @@ from src.notifiers.base import Notifier
 
 
 class TelegramNotifier(Notifier):
-    def __init__(self, token: str, chat_ids: list[int]):
-        self.token = token
-        self.chat_ids = chat_ids
+    def __init__(self, **kwargs):
+        token_env = kwargs.get('token_env')
+        if not token_env:
+            raise ValueError('TelegramNotifier требует token_env')
+
+        import os
+        self.token = os.getenv(token_env, token_env)
+        self.chat_ids = kwargs.get('chat_ids')
+        if not self.chat_ids:
+            raise ValueError('TelegramNotifier требует chat_ids')
+
         self.base_url = f'https://api.telegram.org/bot{self.token}'
 
     async def send(self, message: str) -> None:
         await self._broadcast(message)
 
     async def skip(self, message: str) -> None:
-        pass
+        print(f'skip: {message}')
 
     async def _broadcast(self, message: str) -> None:
         async with httpx.AsyncClient(timeout=5.0) as client:

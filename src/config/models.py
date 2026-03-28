@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-import os
 
 
 class Filter(BaseModel):
@@ -14,16 +13,9 @@ class Message(BaseModel):
 
 class NotifierConfig(BaseModel):
     type: str
-    token_env: Optional[str] = None
-    chat_ids: Optional[List[int]] = None
 
-    def get_token(self):
-        if self.token_env:
-            token = os.getenv(self.token_env)
-            if not token:
-                raise ValueError(f'ENV variable "{self.token_env}" is not set')
-            return token
-        return None
+    class Config:
+        extra = 'allow'
 
 
 class Trigger(BaseModel):

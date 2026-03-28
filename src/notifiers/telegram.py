@@ -22,7 +22,11 @@ class TelegramNotifier(Notifier):
             ]
             await self._gather(tasks)
 
-    async def _send_to_chat(self, client: httpx.AsyncClient, chat_id: int, message: str):
+    async def _send_to_chat(
+            self,
+            client: httpx.AsyncClient,
+            chat_id: int,
+            message: str):
         try:
             resp = await client.post(
                 f'{self.base_url}/sendMessage',

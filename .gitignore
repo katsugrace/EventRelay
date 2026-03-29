@@ -48,6 +48,7 @@ coverage.xml
 *.cover
 *.py.cover
 .hypothesis/
+coverage.lcov
 .pytest_cache/
 cover/
 

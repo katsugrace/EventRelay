@@ -1,6 +1,6 @@
 # EventRelay
 
-![Coverage Badge](assets/coverage-badge.svg)
+![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg) ![Tests](https://img.shields.io/badge/tests-pytest-green.svg) ![Coverage Badge](assets/coverage-badge.svg)
 
 Capture events, filter them and send notifications. EventRelay creates API endpoints to receive events, checks them against specified conditions, and sends notifications.
 

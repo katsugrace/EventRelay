@@ -1,5 +1,8 @@
+import logging
 from src.notifiers.base import Notifier
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 class MockNotifier(Notifier):
@@ -8,9 +11,9 @@ class MockNotifier(Notifier):
         self.skipped: List[str] = []
 
     async def send(self, message: str) -> None:
-        print(f'[MockNotifier] send: {message}')
+        logger.info(f'[MockNotifier] send: {message}')
         self.sent.append(message)
 
     async def skip(self, message: str) -> None:
-        print(f'[MockNotifier] skip: {message}')
+        logger.info(f'[MockNotifier] skip: {message}')
         self.skipped.append(message)

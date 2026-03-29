@@ -172,16 +172,16 @@ def register_routes(
         triggers: Dict[str, Trigger],
         notifiers: Dict[str, Notifier]) -> None:
     if not triggers:
-        logger.warning("No triggers configured")
+        logger.warning('No triggers configured')
         return
 
     for trigger_name, trigger in triggers.items():
         if not trigger.path:
-            logger.error(f"Trigger '{trigger_name}' has no path")
+            logger.error(f'Trigger "{trigger_name}" has no path')
             continue
 
         if not trigger.notify:
-            logger.warning(f"Trigger '{trigger_name}' has no notifiers")
+            logger.warning(f'Trigger "{trigger_name}" has no notifiers')
 
         methods = trigger.methods or ['POST']
         for method in methods:

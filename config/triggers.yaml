@@ -3,6 +3,8 @@ notifiers:
     type: telegram
     token_env: TELEGRAM_API
     chat_ids: [1]
+    max_retries: 3
+    retry_delay: 1
 
   mock:
     type: mock

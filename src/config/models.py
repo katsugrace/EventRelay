@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Optional
 
 
@@ -13,9 +13,7 @@ class Message(BaseModel):
 
 class NotifierConfig(BaseModel):
     type: str
-
-    class Config:
-        extra = 'allow'
+    model_config = ConfigDict(extra='allow')
 
 
 class Trigger(BaseModel):
@@ -26,6 +24,8 @@ class Trigger(BaseModel):
     name: Optional[str] = None
     methods: Optional[List[str]] = ['POST']
     tags: Optional[List[str]] = None
+    active: Optional[bool] = True
+    description: Optional[str] = None
 
 
 class AppConfig(BaseModel):

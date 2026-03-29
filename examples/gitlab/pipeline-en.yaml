@@ -1,0 +1,322 @@
+notifiers:
+  telegram_alerts:
+    type: telegram
+    token_env: TELEGRAM_API
+    chat_ids: [123456789]
+
+  mock:
+    type: mock
+
+triggers:
+  # Pipeline failed
+  pipeline_failed:
+    name: "Pipeline failed"
+    active: true
+    description: "pipeline finished with error (failed)"
+    path: /webhooks/gitlab/pipeline/failed
+    methods: [POST]
+    tags: [GitLab, Pipeline, Critical]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: failed
+
+    message:
+      text: |
+        ❌ PIPELINE FAILED!
+
+        📦 Project: {project[name]}
+        🌳 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline in protected branch
+  pipeline_protected_branch:
+    name: "Pipeline protected branch"
+    active: true
+    description: "Pipeline in protected branch (main, master, production)"
+    path: /webhooks/gitlab/pipeline/protected
+    methods: [POST]
+    tags: [GitLab, Pipeline, Protected]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        in: [main, master, production]
+
+    message:
+      text: |
+        🔒 Pipeline in PROTECTED branch!
+
+        📦 Project: {project[name]}
+        🔒 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        📊 Status: {object_attributes[detailed_status]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline from MR
+  pipeline_from_mr:
+    name: "Pipeline from MR"
+    active: true
+    description: "Pipeline from merge request"
+    path: /webhooks/gitlab/pipeline/mr
+    methods: [POST]
+    tags: [GitLab, Pipeline, MR]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.source
+        equals: merge_request_event
+
+    message:
+      text: |
+        🔀 Pipeline from MR
+
+        📦 Project: {project[name]}
+        🔀 MR: {merge_request[title]}
+        🌳 Branch: {merge_request[source_branch]} → {merge_request[target_branch]}
+        📊 Status: {object_attributes[detailed_status]}
+
+        🔗 MR: {merge_request[url]}
+        🔗 Pipeline: {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline with tag
+  pipeline_with_tag:
+    name: "Pipeline with Tag"
+    active: true
+    description: "Pipeline for commit with tag"
+    path: /webhooks/gitlab/pipeline/tag
+    methods: [POST]
+    tags: [GitLab, Pipeline, Tag]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.tag
+        equals: true
+
+    message:
+      text: |
+        🏷️ Pipeline for TAG!
+
+        📦 Project: {project[name]}
+        🏷️ Tag: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        📊 Status: {object_attributes[detailed_status]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline in develop
+  pipeline_develop:
+    name: "Pipeline in develop"
+    active: true
+    description: "Pipeline in develop branch"
+    path: /webhooks/gitlab/pipeline/develop
+    methods: [POST]
+    tags: [GitLab, Pipeline, Develop]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        equals: develop
+
+    message:
+      text: |
+        🌱 Pipeline in develop
+
+        📦 Project: {project[name]}
+        🌳 Branch: develop
+        👤 Author: {user[name]}
+        📊 Status: {object_attributes[detailed_status]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Deploy to staging successful
+  deployment_staging_success:
+    name: "Deploy to staging successful"
+    active: true
+    description: "Code successfully deployed to staging"
+    path: /webhooks/gitlab/pipeline/deploy-staging
+    methods: [POST]
+    tags: [GitLab, Pipeline, Deploy, Staging]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: success
+      - field: builds[0].environment.name
+        equals: staging
+
+    message:
+      text: |
+        ✅ Deploy to STAGING successful!
+
+        📦 Project: {project[name]}
+        🌳 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        🚀 Environment: staging
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline pending
+  pipeline_pending:
+    name: "Pipeline pending"
+    active: true
+    description: "Pipeline is waiting to start (pending)"
+    path: /webhooks/gitlab/pipeline/pending
+    methods: [POST]
+    tags: [GitLab, Pipeline, Pending]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: pending
+
+    message:
+      text: |
+        ⏳ Pipeline PENDING
+
+        📦 Project: {project[name]}
+        🌳 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        ⏳ Queue time: {object_attributes[queued_duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Slow pipeline
+  pipeline_slow:
+    name: "Pipeline slow"
+    active: true
+    description: "Long pipeline (duration > 120s) that finished successfully"
+    path: /webhooks/gitlab/pipeline/slow
+    methods: [POST]
+    tags: [GitLab, Pipeline, Performance]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.duration
+        gt: 120
+      - field: object_attributes.status
+        equals: success
+
+    message:
+      text: |
+        🐌 Slow pipeline detected
+
+        📦 Project: {project[name]}
+        🌳 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        ⏱️ Duration: {object_attributes[duration]}s (limit exceeded 120s)
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline for release branch
+  pipeline_release:
+    name: "Pipeline for Release"
+    active: true
+    description: "Pipeline for release branch"
+    path: /webhooks/gitlab/pipeline/release
+    methods: [POST]
+    tags: [GitLab, Pipeline, Release]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        regex: "^release"
+
+    message:
+      text: |
+        📌 Pipeline for RELEASE!
+
+        📦 Project: {project[name]}
+        📌 Release: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        📊 Status: {object_attributes[detailed_status]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🎯 Stages: {object_attributes[stages]}
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Deploy to production failed
+  deployment_production_failed:
+    name: "Deploy to production failed"
+    active: true
+    description: "Deploy to production failed for main/master/production branches"
+    path: /webhooks/gitlab/pipeline/deploy-prod-failed
+    methods: [POST]
+    tags: [GitLab, Pipeline, Deploy, Production, Critical]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: failed
+      - field: object_attributes.ref
+        in: [main, master, production]
+
+    message:
+      text: |
+        🔴 CRITICAL! Deploy to PRODUCTION FAILED!
+
+        📦 Project: {project[name]}
+        🔴 Branch: {object_attributes[ref]}
+        👤 Author: {user[name]}
+        ⏱️ Duration: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock

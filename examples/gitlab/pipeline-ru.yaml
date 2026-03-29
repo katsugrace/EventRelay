@@ -1,0 +1,322 @@
+notifiers:
+  telegram_alerts:
+    type: telegram
+    token_env: TELEGRAM_API
+    chat_ids: [123456789]
+
+  mock:
+    type: mock
+
+triggers:
+  # Pipeline упал
+  pipeline_failed:
+    name: "Pipeline failed"
+    active: true
+    description: "pipeline завершился с ошибкой (failed)"
+    path: /webhooks/gitlab/pipeline/failed
+    methods: [POST]
+    tags: [GitLab, Pipeline, Critical]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: failed
+
+    message:
+      text: |
+        ❌ PIPELINE УПАЛ!
+
+        📦 Проект: {project[name]}
+        🌳 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        ⏱️ Продолжалась: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline в защищённой ветке
+  pipeline_protected_branch:
+    name: "Pipeline protected branch"
+    active: true
+    description: "Pipeline в защищённой ветке (main, master, production)"
+    path: /webhooks/gitlab/pipeline/protected
+    methods: [POST]
+    tags: [GitLab, Pipeline, Protected]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        in: [main, master, production]
+
+    message:
+      text: |
+        🔒 Pipeline в ЗАЩИЩЁННОЙ ветке!
+
+        📦 Проект: {project[name]}
+        🔒 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        📊 Статус: {object_attributes[detailed_status]}
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline из MR
+  pipeline_from_mr:
+    name: "Pipeline from MR"
+    active: true
+    description: "Pipeline из merge request"
+    path: /webhooks/gitlab/pipeline/mr
+    methods: [POST]
+    tags: [GitLab, Pipeline, MR]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.source
+        equals: merge_request_event
+
+    message:
+      text: |
+        🔀 Pipeline из MR
+
+        📦 Проект: {project[name]}
+        🔀 MR: {merge_request[title]}
+        🌳 Ветка: {merge_request[source_branch]} → {merge_request[target_branch]}
+        📊 Статус: {object_attributes[detailed_status]}
+
+        🔗 MR: {merge_request[url]}
+        🔗 Pipeline: {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline с тегом
+  pipeline_with_tag:
+    name: "Pipeline with Tag"
+    active: true
+    description: "Pipeline для коммита с тегом (tag)"
+    path: /webhooks/gitlab/pipeline/tag
+    methods: [POST]
+    tags: [GitLab, Pipeline, Tag]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.tag
+        equals: true
+
+    message:
+      text: |
+        🏷️ Pipeline для ТЕГА!
+
+        📦 Проект: {project[name]}
+        🏷️ Тег: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        📊 Статус: {object_attributes[detailed_status]}
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline в develop
+  pipeline_develop:
+    name: "Pipeline in develop"
+    active: true
+    description: "Pipeline в ветке develop"
+    path: /webhooks/gitlab/pipeline/develop
+    methods: [POST]
+    tags: [GitLab, Pipeline, Develop]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        equals: develop
+
+    message:
+      text: |
+        🌱 Pipeline в develop
+
+        📦 Проект: {project[name]}
+        🌳 Ветка: develop
+        👤 Автор: {user[name]}
+        📊 Статус: {object_attributes[detailed_status]}
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Deploy на staging успешен
+  deployment_staging_success:
+    name: "Deploy to staging successful"
+    active: true
+    description: "Код успешно залился на тестовый сервер"
+    path: /webhooks/gitlab/pipeline/deploy-staging
+    methods: [POST]
+    tags: [GitLab, Pipeline, Deploy, Staging]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: success
+      - field: builds[0].environment.name
+        equals: staging
+
+    message:
+      text: |
+        ✅ Deploy на STAGING успешен!
+
+        📦 Проект: {project[name]}
+        🌳 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        🚀 Окружение: staging
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline в ожидании
+  pipeline_pending:
+    name: "Pipeline pending"
+    active: true
+    description: "Pipeline ждёт когда ему позволят начать (pending)"
+    path: /webhooks/gitlab/pipeline/pending
+    methods: [POST]
+    tags: [GitLab, Pipeline, Pending]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: pending
+
+    message:
+      text: |
+        ⏳ Pipeline в ОЖИДАНИИ
+
+        📦 Проект: {project[name]}
+        🌳 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        ⏳ Время ожидания: {object_attributes[queued_duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Медленный pipeline
+  pipeline_slow:
+    name: "Pipeline slow"
+    active: true
+    description: "Долгий pipeline (duration > 120s) который успешно завершился"
+    path: /webhooks/gitlab/pipeline/slow
+    methods: [POST]
+    tags: [GitLab, Pipeline, Performance]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.duration
+        gt: 120
+      - field: object_attributes.status
+        equals: success
+
+    message:
+      text: |
+        🐌 Медленный pipeline обнаружен
+
+        📦 Проект: {project[name]}
+        🌳 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        ⏱️ Длительность: {object_attributes[duration]}s (превышен лимит 120s)
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Pipeline в release ветке
+  pipeline_release:
+    name: "Pipeline for Release"
+    active: true
+    description: "Pipeline для ветки release"
+    path: /webhooks/gitlab/pipeline/release
+    methods: [POST]
+    tags: [GitLab, Pipeline, Release]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.ref
+        regex: "^release"
+
+    message:
+      text: |
+        📌 Pipeline для RELEASE!
+
+        📦 Проект: {project[name]}
+        📌 Release: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        📊 Статус: {object_attributes[detailed_status]}
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🎯 Stages: {object_attributes[stages]}
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock
+
+  # Deploy на production упал
+  deployment_production_failed:
+    name: "Deploy to production failed"
+    active: true
+    description: "Deploy на production упал для веток main/master/production"
+    path: /webhooks/gitlab/pipeline/deploy-prod-failed
+    methods: [POST]
+    tags: [GitLab, Pipeline, Deploy, Production, Critical]
+
+    filters:
+      - field: object_kind
+        equals: pipeline
+      - field: object_attributes.status
+        equals: failed
+      - field: object_attributes.ref
+        in: [main, master, production]
+
+    message:
+      text: |
+        🔴 CRITICAL! Deploy на PRODUCTION УПАЛ!
+
+        📦 Проект: {project[name]}
+        🔴 Ветка: {object_attributes[ref]}
+        👤 Автор: {user[name]}
+        ⏱️ Длительность: {object_attributes[duration]}s
+
+        🔗 {object_attributes[url]}
+
+    notify:
+      - telegram_alerts
+      - mock

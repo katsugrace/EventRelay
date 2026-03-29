@@ -1,5 +1,8 @@
 import httpx
+import logging
 from src.notifiers.base import Notifier
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramNotifier(Notifier):
@@ -20,7 +23,7 @@ class TelegramNotifier(Notifier):
         await self._broadcast(message)
 
     async def skip(self, message: str) -> None:
-        print(f'skip: {message}')
+        logger.debug(f'TelegramNotifier skip message: {message}')
 
     async def _broadcast(self, message: str) -> None:
         async with httpx.AsyncClient(timeout=5.0) as client:

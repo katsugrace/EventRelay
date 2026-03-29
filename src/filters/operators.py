@@ -96,12 +96,3 @@ class EndsWithFilter(BaseFilter):
     def check(self, data: dict) -> bool:
         val = self.get_value(data)
         return val.endswith(self.value) if isinstance(val, str) else False
-
-
-class NotInFilter(BaseFilter):
-    def __init__(self, field: str, values: list):
-        super().__init__(field)
-        self.values = values
-
-    def check(self, data: dict) -> bool:
-        return self.get_value(data) not in self.values

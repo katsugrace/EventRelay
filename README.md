@@ -1,5 +1,7 @@
 # EventRelay
 
+![Coverage Badge](assets/coverage-badge.svg)
+
 Capture events, filter them and send notifications. EventRelay creates API endpoints to receive events, checks them against specified conditions, and sends notifications.
 
 ## Installation and Startup

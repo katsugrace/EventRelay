@@ -31,6 +31,16 @@ class TelegramNotifier(Notifier):
 
         self.base_url = f'https://api.telegram.org/bot{self.token}'
 
+    def _parse_chat_id(self, chat_string: str) -> tuple[int, int | None]:
+        parts = str(chat_string).strip().split('/')
+        try:
+            chat_id = str(parts[0])
+            thread_id = str(parts[1]) if len(parts) > 1 else None
+            return chat_id, thread_id
+        except (ValueError, IndexError) as e:
+            logger.error(f'Invalid chat_id format: {chat_string}')
+            raise ValueError(f'Invalid chat_id format: {chat_string}') from e
+
     async def send(self, message: str) -> None:
         logger.info(f'Sending message to {len(self.chat_ids)} Telegram chat(s)')
         await self._broadcast(message)
@@ -41,17 +51,17 @@ class TelegramNotifier(Notifier):
     async def _broadcast(self, message: str) -> None:
         async with httpx.AsyncClient(timeout=10.0) as client:
             tasks = [
-                self._send_to_chat_with_retry(client, chat_id, message)
-                for chat_id in self.chat_ids
+                self._send_to_chat_with_retry(client, chat_entry, message)
+                for chat_entry in self.chat_ids
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
             failed_chats = []
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
-                    chat_id = self.chat_ids[i]
-                    failed_chats.append(chat_id)
-                    logger.error(f'Failed to send to chat {chat_id}: {result}')
+                    chat_entry = self.chat_ids[i]
+                    failed_chats.append(chat_entry)
+                    logger.error(f'Failed to send to chat {chat_entry}: {result}')
 
             if failed_chats:
                 raise RuntimeError(
@@ -61,14 +71,15 @@ class TelegramNotifier(Notifier):
     async def _send_to_chat_with_retry(
             self,
             client: httpx.AsyncClient,
-            chat_id: int,
+            chat_entry: str,
             message: str):
+        chat_id, thread_id = self._parse_chat_id(chat_entry)
         for attempt in range(1, self.max_retries + 1):
             try:
-                response = await self._send_to_chat(client, chat_id, message)
+                response = await self._send_to_chat(client, chat_id, thread_id, message)
                 if response['ok']:
                     logger.info(
-                        f'Message sent successfully to chat {chat_id} '
+                        f'Message sent successfully to chat {chat_entry} '
                         f'(message_id: {response.get("result", {}).get("message_id")})'
                     )
                     return
@@ -76,13 +87,13 @@ class TelegramNotifier(Notifier):
                 error_code = response.get('error_code')
                 error_description = response.get('description', 'Unknown error')
                 logger.error(
-                    f'Telegram API error for chat {chat_id}: '
+                    f'Telegram API error for chat {chat_entry}: '
                     f'[{error_code}] {error_description}'
                 )
 
                 if error_code in [400, 403, 404]:
                     logger.error(
-                        f'Non-retryable error {error_code} for chat {chat_id}, '
+                        f'Non-retryable error {error_code} for chat {chat_entry}, '
                         f'giving up'
                     )
                     raise RuntimeError(
@@ -97,21 +108,21 @@ class TelegramNotifier(Notifier):
 
                 delay = self.retry_delay * (2 ** (attempt - 1))
                 logger.warning(
-                    f'Telegram API error {error_code} for chat {chat_id}, '
+                    f'Telegram API error {error_code} for chat {chat_entry}, '
                     f'retrying in {delay}s (attempt {attempt}/{self.max_retries})'
                 )
                 await asyncio.sleep(delay)
             except httpx.TimeoutException as e:
                 if attempt == self.max_retries:
                     logger.error(
-                        f'Timeout sending to chat {chat_id} '
+                        f'Timeout sending to chat {chat_entry} '
                         f'after {self.max_retries} attempts: {e}'
                     )
                     raise
 
                 delay = self.retry_delay * (2 ** (attempt - 1))
                 logger.warning(
-                    f'Timeout sending to chat {chat_id}, '
+                    f'Timeout sending to chat {chat_entry}, '
                     f'retrying in {delay}s (attempt {attempt}/{self.max_retries})'
                 )
 
@@ -119,28 +130,28 @@ class TelegramNotifier(Notifier):
             except httpx.RequestError as e:
                 if attempt == self.max_retries:
                     logger.error(
-                        f'Network error sending to chat {chat_id} '
+                        f'Network error sending to chat {chat_entry} '
                         f'after {self.max_retries} attempts: {e}'
                     )
                     raise
 
                 delay = self.retry_delay * (2 ** (attempt - 1))
                 logger.warning(
-                    f'Network error sending to chat {chat_id}, '
+                    f'Network error sending to chat {chat_entry}, '
                     f'retrying in {delay}s (attempt {attempt}/{self.max_retries}): {e}'
                 )
                 await asyncio.sleep(delay)
             except Exception as e:
                 if attempt == self.max_retries:
                     logger.error(
-                        f'Unexpected error sending to chat {chat_id} '
+                        f'Unexpected error sending to chat {chat_entry} '
                         f'after {self.max_retries} attempts: {e}'
                     )
                     raise
 
                 delay = self.retry_delay * (2 ** (attempt - 1))
                 logger.warning(
-                    f'Unexpected error sending to chat {chat_id}, '
+                    f'Unexpected error sending to chat {chat_entry}, '
                     f'retrying in {delay}s (attempt {attempt}/{self.max_retries}): {e}'
                 )
 
@@ -150,13 +161,19 @@ class TelegramNotifier(Notifier):
             self,
             client: httpx.AsyncClient,
             chat_id: int,
+            thread_id: int | None,
             message: str) -> dict:
+        payload = {
+            'chat_id': chat_id,
+            'text': message,
+        }
+
+        if thread_id is not None:
+            payload['message_thread_id'] = thread_id
+
         resp = await client.post(
             f'{self.base_url}/sendMessage',
-            json={
-                'chat_id': chat_id,
-                'text': message,
-            },
+            json=payload,
             timeout=10.0
         )
 

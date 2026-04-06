@@ -62,7 +62,7 @@ class TelegramNotifier(Notifier):
                 if isinstance(result, Exception):
                     chat_entry = self.chat_ids[i]
                     failed_chats.append(chat_entry)
-                    logger.error(f'Failed to send to chat {chat_entry}: {result}')
+                    logger.error(f'Failed to send to chat {chat_entry}')
 
             if failed_chats:
                 raise RuntimeError(
@@ -86,25 +86,22 @@ class TelegramNotifier(Notifier):
                     return
 
                 error_code = response.get('error_code')
-                error_description = response.get('description', 'Unknown error')
                 logger.error(
                     f'Telegram API error for chat {chat_entry}: '
-                    f'[{error_code}] {error_description}'
+                    f'[{error_code}] '
                 )
 
                 if error_code in [400, 403, 404]:
                     logger.error(
-                        f'Non-retryable error {error_code} for chat {chat_entry}, '
-                        f'giving up'
+                        f'Non-retryable error {error_code} for chat {chat_entry}'
                     )
                     raise RuntimeError(
-                        f'Telegram API error: [{error_code}] {error_description}'
+                        f'Telegram API error: [{error_code}]'
                     )
 
                 if attempt == self.max_retries:
                     raise RuntimeError(
-                        f'Telegram API error after {self.max_retries} attempts: '
-                        f'[{error_code}] {error_description}'
+                        f'Telegram API error after {self.max_retries} attempts: [{error_code}]'
                     )
 
                 delay = self.retry_delay * (2 ** (attempt - 1))
@@ -188,6 +185,6 @@ class TelegramNotifier(Notifier):
         try:
             result = resp.json()
             return result
-        except json.JSONDecodeError as e:
-            logger.error(f'Failed to parse Telegram API response: {e}')
-            raise RuntimeError(f'Invalid JSON response from Telegram API: {e}')
+        except json.JSONDecodeError:
+            logger.error('Failed to parse Telegram API response')
+            raise RuntimeError('Invalid JSON response from Telegram API')

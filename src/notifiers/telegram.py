@@ -3,6 +3,7 @@ import logging
 import asyncio
 import json
 
+from typing import Tuple, Optional
 from src.notifiers.base import Notifier
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class TelegramNotifier(Notifier):
 
         self.base_url = f'https://api.telegram.org/bot{self.token}'
 
-    def _parse_chat_id(self, chat_string: str) -> tuple[int, int | None]:
+    def _parse_chat_id(self, chat_string: str) -> Optional[Tuple[str, str]]:
         parts = str(chat_string).strip().split('/')
         try:
             chat_id = str(parts[0])
@@ -161,7 +162,7 @@ class TelegramNotifier(Notifier):
             self,
             client: httpx.AsyncClient,
             chat_id: int,
-            thread_id: int | None,
+            thread_id: Optional[int],
             message: str) -> dict:
         payload = {
             'chat_id': chat_id,

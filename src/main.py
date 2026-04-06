@@ -9,6 +9,7 @@ from src.config.loader import Config
 from src.env import EnvConfig
 from src.api.routes import register_routes
 from src.notifiers.builder import build_notifiers
+from src.api.auth.builder import build_auths
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,11 +56,26 @@ try:
                 )
                 sys.exit(1)
 
+    auths = {}
+    auths_config = config.get_auths()
+    if auths_config:
+        logger.info(f'Loaded {len(auths_config)} auths')
+        auths = build_auths(auths_config)
+        logger.info(f'Built {len(auths)} auth instances')
+        for auth_name in auths_config.keys():
+            if auth_name not in auths:
+                logger.error(
+                    f'Auth "{auth_name}" is defined in configuration '
+                    'but failed to build an instance'
+                )
+                sys.exit(1)
+
     app = FastAPI(title='Event Relay API', version='0.1.0')
     register_routes(
         app=app,
         triggers=triggers,
-        notifiers=notifiers
+        notifiers=notifiers,
+        auths=auths
     )
 except FileNotFoundError as e:
     logger.error(f'Configuration file error: {e}')

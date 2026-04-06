@@ -1,3 +1,8 @@
+auths:
+  gitlab_main:
+    type: gitlab_token
+    token_env: GITLAB_WEBHOOK_SECRET
+
 notifiers:
   main:
     type: telegram

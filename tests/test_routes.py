@@ -47,7 +47,7 @@ class TestCreateEndpoint:
         notifiers = {'mock': mock_notifier}
         endpoint = create_endpoint('test_trigger', sample_trigger, notifiers)
         response = await endpoint({'type': 'push', 'repo': 'my-repo'})
-        assert response.status_code == 204
+        assert response.status_code == 200
         mock_notifier.send.assert_called_once()
         call_args = mock_notifier.send.call_args
         assert 'Event: push from my-repo' in call_args[1]['message']
@@ -59,7 +59,7 @@ class TestCreateEndpoint:
         notifiers = {'mock': mock_notifier}
         endpoint = create_endpoint('test_trigger', sample_trigger, notifiers)
         response = await endpoint({'type': 'pr', 'repo': 'my-repo'})
-        assert response.status_code == 204
+        assert response.status_code == 200
         mock_notifier.skip.assert_called_once()
         mock_notifier.send.assert_not_called()
 
@@ -85,7 +85,7 @@ class TestCreateEndpoint:
 
         endpoint = create_endpoint('test_trigger', sample_trigger, notifiers)
         response = await endpoint({'type': 'push', 'repo': 'my-repo'})
-        assert response.status_code == 204
+        assert response.status_code == 200
         mock_notifier.send.assert_called_once()
         mock_notifier2.send.assert_called_once()
 
@@ -99,7 +99,7 @@ class TestCreateEndpoint:
             notifiers)
 
         response = await endpoint({'random': 'data'})
-        assert response.status_code == 204
+        assert response.status_code == 200
         mock_notifier.send.assert_called_once()
 
     @pytest.mark.asyncio
@@ -211,16 +211,16 @@ class TestRegisterRoutes:
         client = TestClient(app)
         mock_notifier.reset_mock()
         response_post = client.post('/webhook/test', json={'method': 'post'})
-        assert response_post.status_code == 204
+        assert response_post.status_code == 200
         mock_notifier.send.assert_called_once()
         mock_notifier.reset_mock()
         response_put = client.put('/webhook/test', json={'method': 'put'})
-        assert response_put.status_code == 204
+        assert response_put.status_code == 200
         mock_notifier.send.assert_called_once()
 
 
 class TestEndToEndWithClient:
-    def test_webhook_endpoint_returns_204(self, sample_trigger, mock_notifier):
+    def test_webhook_endpoint_returns_200(self, sample_trigger, mock_notifier):
         app = FastAPI()
         triggers = {'test': sample_trigger}
         notifiers = {'mock': mock_notifier}
@@ -231,7 +231,7 @@ class TestEndToEndWithClient:
             json={'type': 'push', 'repo': 'my-repo'}
         )
 
-        assert response.status_code == 204
+        assert response.status_code == 200
 
     def test_webhook_endpoint_with_invalid_filter(
             self, sample_trigger, mock_notifier):
@@ -245,7 +245,7 @@ class TestEndToEndWithClient:
             json={'type': 'pr', 'repo': 'my-repo'}
         )
 
-        assert response.status_code == 204
+        assert response.status_code == 200
 
     def test_multiple_webhooks_independent(self, mock_notifier):
         app = FastAPI()
@@ -273,11 +273,11 @@ class TestEndToEndWithClient:
             json={'type': 'push'}
         )
 
-        assert response1.status_code == 204
+        assert response1.status_code == 200
         mock_notifier.reset_mock()
         response2 = client.post(
             '/webhook/2',
             json={'type': 'pr'}
         )
 
-        assert response2.status_code == 204
+        assert response2.status_code == 200

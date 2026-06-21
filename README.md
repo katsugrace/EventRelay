@@ -59,7 +59,7 @@ triggers:
   example_trigger:
     name: Example Trigger                   # Human-readable name
     active: true                            # Is the trigger active?
-    description: Пример триггера для обработки событий
+    description: Example of a trigger for event handling
     path: /webhooks/example                 # API endpoint path
     methods: [POST]                         # HTTP methods
     tags: [Example]                         # Tags for API documentation
@@ -84,7 +84,7 @@ Supported operators for filters:
 - `equals`: exact match
 - `not_equals`: is not equal to
 - `in`: entry in the list
-- `exists`: Check if a field exists (true/false)
+- `exists`: check if a field exists (true/false)
 - `contains`: contains the substring
 - `regex`: regular expression
 - `gt`: more than
@@ -151,8 +151,8 @@ EventRelay automatically creates API endpoints based on trigger configurations. 
 
 ### API Documentation
 Once the app is launched, the documentation is available at:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+- `Swagger UI`: `http://127.0.0.1:8000/docs`
+- `ReDoc`: `http://127.0.0.1:8000/redoc`
 
 ### Examples of queries
 
@@ -187,3 +187,26 @@ curl -X POST "http://127.0.0.1:8000/webhooks/gitlab/mr" \
     }
   }'
 ```
+
+## Docker
+
+### Build Image
+```bash
+docker build -t eventrelay:latest .
+```
+
+### Launch
+```bash
+docker run -d \
+  --name eventrelay \
+  -p 8022:8022 \
+  -e CONFIG_PATH=/app/config/custom.yaml \
+  -e TELEGRAM_API=<telegram_api_url> \
+  -e GITLAB_WEBHOOK_SECRET=<secret> \
+  eventrelay:latest
+```
+
+### Parameters
+- `CONFIG_PATH`: path to the YAML configuration (by default **config/triggers.yaml**)
+- `TELEGRAM_API`: telegram bot token used for sending notifications
+- `GITLAB_WEBHOOK_SECRET`: a secret for verifying incoming webhook requests from GitLab

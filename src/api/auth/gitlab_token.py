@@ -15,9 +15,6 @@ class GitLabTokenAuth(Auth):
 
         import os
         self.token = os.getenv(token_env, token_env)
-        if not self.token:
-            logger.error(f'Token not found in environment variable: {token_env}')
-            raise ValueError(f'Token not found in environment variable: {token_env}')
 
     async def validate(self, request: Request):
         if request.headers.get('X-Gitlab-Token') != self.token:

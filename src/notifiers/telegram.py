@@ -34,13 +34,9 @@ class TelegramNotifier(Notifier):
 
     def _parse_chat_id(self, chat_string: str) -> Optional[Tuple[str, str]]:
         parts = str(chat_string).strip().split('/')
-        try:
-            chat_id = str(parts[0])
-            thread_id = str(parts[1]) if len(parts) > 1 else None
-            return chat_id, thread_id
-        except (ValueError, IndexError) as e:
-            logger.error(f'Invalid chat_id format: {chat_string}')
-            raise ValueError(f'Invalid chat_id format: {chat_string}') from e
+        chat_id = str(parts[0])
+        thread_id = str(parts[1]) if len(parts) > 1 else None
+        return chat_id, thread_id
 
     async def send(self, message: str) -> None:
         logger.info(f'Sending message to {len(self.chat_ids)} Telegram chat(s)')

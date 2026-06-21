@@ -9,7 +9,7 @@ def build_notifiers(
     for name, cfg in notifiers_config.items():
         result[name] = NotifierFactory.create(
             cfg.type,
-            **cfg.dict(exclude={'type'})
+            **cfg.model_dump(exclude={'type'})
         )
 
     return result

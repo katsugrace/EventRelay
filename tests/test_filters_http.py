@@ -1,4 +1,3 @@
-import json
 from unittest.mock import AsyncMock
 
 import pytest
@@ -18,7 +17,6 @@ def mock_notifier():
     return notifier
 
 
-# Sample GitLab pipeline payload (trimmed to relevant fields)
 SAMPLE_PIPELINE = {
     "object_kind": "pipeline",
     "object_attributes": {
@@ -44,7 +42,7 @@ SAMPLE_PIPELINE = {
     "filters,expect_send",
     [
         ([{"field": "object_kind", "equals": "pipeline"}], True),
-        ([{"field": "object_kind", "equals": "pipeline"}], False),
+        ([{"field": "object_kind", "equals": "pipeline-failed"}], False),
         ([{"field": "object_kind", "not_equals": "push"}], True),
         ([{"field": "object_kind", "not_equals": "pipeline"}], False),
         ([{"field": "commit.title", "in": [SAMPLE_PIPELINE["commit"]["title"], "other"]}], True),
@@ -56,12 +54,14 @@ SAMPLE_PIPELINE = {
         ([{"field": "commit.title", "regex": r"test.*pipeline"}], True),
         ([{"field": "object_attributes.id", "gt": 40000}], True),
         ([{"field": "object_attributes.id", "gt": 99999}], False),
-        ([{"field": "object_attributes.id", "lt": 50000}], True),
+        ([{"field": "object_attributes.id", "lt": 99999}], True),
+        ([{"field": "object_attributes.id", "lt": 40000}], False),
         ([{"field": "commit.title", "startswith": "test"}], True),
+        ([{"field": "commit.title", "startswith": "xxxtest"}], False),
         ([{"field": "commit.title", "endswith": "pipeline"}], True),
+        ([{"field": "commit.title", "endswith": "xxpipeline"}], False),
     ],
 )
-
 def test_parametrized_filters_over_http(mock_notifier, filters, expect_send):
     filter_objs = [Filter(**f) for f in filters]
     trigger = Trigger(

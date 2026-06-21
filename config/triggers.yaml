@@ -15,27 +15,200 @@ notifiers:
     type: mock
 
 triggers:
-  gitlab_pipeline_failed:
-    name: GitLab Pipeline Failed
-    active: true
-    description: Отправка уведомлений при падении пайплайна
-    path: /pb/gitlab/pipeline
-    methods: [POST]
-    tags: [GitLab]
-
+  equals_match:
+    path: /test/filters/equals/match
     filters:
       - field: object_kind
         equals: pipeline
-
-      - field: object_attributes.status
-        equals: failed
-
-      - field: object_attributes.name
-        equals: test
-
     message:
-      text: "❌ Pipeline failed: {object_attributes[web_url]}"
+      text: "equals match"
+    notify: [mock]
 
-    notify:
-      - main
-      - mock
+  equals_skip:
+    path: /test/filters/equals/skip
+    filters:
+      - field: object_kind
+        equals: not_pipeline
+    message:
+      text: "equals skip"
+    notify: [mock]
+
+  not_equals_match:
+    path: /test/filters/not_equals/match
+    filters:
+      - field: object_kind
+        not_equals: push
+    message:
+      text: "not_equals match"
+    notify: [mock]
+
+  not_equals_skip:
+    path: /test/filters/not_equals/skip
+    filters:
+      - field: object_kind
+        not_equals: pipeline
+    message:
+      text: "not_equals skip"
+    notify: [mock]
+
+  in_match:
+    path: /test/filters/in/match
+    filters:
+      - field: commit.title
+        in: ["test(.gitlab-ci): Добавлен тестовый pipeline", "other"]
+    message:
+      text: "in match"
+    notify: [mock]
+
+  in_skip:
+    path: /test/filters/in/skip
+    filters:
+      - field: commit.title
+        in: ["other"]
+    message:
+      text: "in skip"
+    notify: [mock]
+
+  in_tags_match:
+    path: /test/filters/in_tags/match
+    filters:
+      - field: tags
+        in: ["python", "pytest"]
+    message:
+      text: "in tags match"
+    notify: [mock]
+
+  in_tags_skip:
+    path: /test/filters/in_tags/skip
+    filters:
+      - field: tags
+        in: ["other"]
+    message:
+      text: "in tags skip"
+    notify: [mock]
+
+  exists_match:
+    path: /test/filters/exists/match
+    filters:
+      - field: commit.title
+        exists: true
+    message:
+      text: "exists match"
+    notify: [mock]
+
+  exists_skip:
+    path: /test/filters/exists/skip
+    filters:
+      - field: missing.field
+        exists: true
+    message:
+      text: "exists skip"
+    notify: [mock]
+
+  contains_match:
+    path: /test/filters/contains/match
+    filters:
+      - field: commit.title
+        contains: test
+    message:
+      text: "contains match"
+    notify: [mock]
+
+  contains_skip:
+    path: /test/filters/contains/skip
+    filters:
+      - field: commit.title
+        contains: nomatch
+    message:
+      text: "contains skip"
+    notify: [mock]
+
+  regex_match:
+    path: /test/filters/regex/match
+    filters:
+      - field: commit.title
+        regex: "test.*pipeline"
+    message:
+      text: "regex match"
+    notify: [mock]
+
+  regex_skip:
+    path: /test/filters/regex/skip
+    filters:
+      - field: commit.title
+        regex: "^nomatch$"
+    message:
+      text: "regex skip"
+    notify: [mock]
+
+  gt_match:
+    path: /test/filters/gt/match
+    filters:
+      - field: object_attributes.id
+        gt: 40000
+    message:
+      text: "gt match"
+    notify: [mock]
+
+  gt_skip:
+    path: /test/filters/gt/skip
+    filters:
+      - field: object_attributes.id
+        gt: 999999
+    message:
+      text: "gt skip"
+    notify: [mock]
+
+  lt_match:
+    path: /test/filters/lt/match
+    filters:
+      - field: object_attributes.id
+        lt: 50000
+    message:
+      text: "lt match"
+    notify: [mock]
+
+  lt_skip:
+    path: /test/filters/lt/skip
+    filters:
+      - field: object_attributes.id
+        lt: 1
+    message:
+      text: "lt skip"
+    notify: [mock]
+
+  startswith_match:
+    path: /test/filters/startswith/match
+    filters:
+      - field: commit.title
+        startswith: test
+    message:
+      text: "startswith match"
+    notify: [mock]
+
+  startswith_skip:
+    path: /test/filters/startswith/skip
+    filters:
+      - field: commit.title
+        startswith: nomatch
+    message:
+      text: "startswith skip"
+    notify: [mock]
+
+  endswith_match:
+    path: /test/filters/endswith/match
+    filters:
+      - field: commit.title
+        endswith: pipeline
+    message:
+      text: "endswith match"
+    notify: [mock]
+
+  endswith_skip:
+    path: /test/filters/endswith/skip
+    filters:
+      - field: commit.title
+        endswith: nomatch
+    message:
+      text: "endswith skip"
+    notify: [mock]

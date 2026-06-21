@@ -4,11 +4,16 @@ from typing import List, Dict, Optional
 
 class Filter(BaseModel):
     field: str
-    equals: Optional[str] = None
+    model_config = ConfigDict(extra='allow')
 
 
 class Message(BaseModel):
     text: str
+
+
+class AuthConfig(BaseModel):
+    type: str
+    model_config = ConfigDict(extra='allow')
 
 
 class NotifierConfig(BaseModel):
@@ -26,8 +31,10 @@ class Trigger(BaseModel):
     tags: Optional[List[str]] = None
     active: Optional[bool] = True
     description: Optional[str] = None
+    auth: Optional[str] = None
 
 
 class AppConfig(BaseModel):
     notifiers: Dict[str, NotifierConfig]
     triggers: Dict[str, Trigger]
+    auths: Optional[Dict[str, AuthConfig]] = {}

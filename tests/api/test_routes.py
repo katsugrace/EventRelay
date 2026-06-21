@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import AsyncMock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi import HTTPException
+import logging
 
 from src.api.routes import create_endpoint, register_routes
 from src.config.models import Trigger, Filter, Message
@@ -281,3 +283,141 @@ class TestEndToEndWithClient:
         )
 
         assert response2.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_auth_http_exception_returns_status():
+    mock_auth = AsyncMock()
+    mock_auth.validate = AsyncMock(side_effect=HTTPException(status_code=401, detail='unauth'))
+
+    trigger = Trigger(
+        path='/webhook/auth',
+        filters=[],
+        message=Message(text='Hi'),
+        notify=['mock'],
+        auth='a'
+    )
+
+    notifiers = {'mock': AsyncMock()}
+    endpoint = create_endpoint('t', trigger, notifiers, auths={'a': mock_auth})
+
+    resp = await endpoint({'any': 'data'})
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_generic_exception_returns_500():
+    mock_auth = AsyncMock()
+    mock_auth.validate = AsyncMock(side_effect=Exception('boom'))
+
+    trigger = Trigger(
+        path='/webhook/auth2',
+        filters=[],
+        message=Message(text='Hi'),
+        notify=['mock'],
+        auth='a'
+    )
+
+    notifiers = {'mock': AsyncMock()}
+    endpoint = create_endpoint('t2', trigger, notifiers, auths={'a': mock_auth})
+
+    resp = await endpoint({'any': 'data'})
+    assert resp.status_code == 500
+
+
+@pytest.mark.asyncio
+async def test_notifier_not_found_returns_207():
+    trigger = Trigger(
+        path='/webhook/miss',
+        filters=[],
+        message=Message(text='Hi'),
+        notify=['missing']
+    )
+
+    endpoint = create_endpoint('miss', trigger, notifiers={})
+    resp = await endpoint({'any': 'data'})
+    assert resp.status_code == 207
+    assert 'errors' in resp.body.decode() or 'errors' in resp.render().body.decode()
+
+
+@pytest.mark.asyncio
+async def test_notifier_send_exception_returns_207():
+    sample_trigger = Trigger(
+        path='/webhook/test',
+        filters=[Filter(field='type', equals='push')],
+        message=Message(text='Event: {type}'),
+        notify=['mock']
+    )
+    mock_notifier = AsyncMock()
+    mock_notifier.send = AsyncMock(side_effect=Exception('send fail'))
+    endpoint = create_endpoint('test_trigger', sample_trigger, {'mock': mock_notifier})
+    resp = await endpoint({'type': 'push', 'repo': 'r'})
+    assert resp.status_code == 207
+
+
+def test_register_routes_no_triggers_and_missing_path():
+    app = FastAPI()
+    mock_notifier = AsyncMock()
+    register_routes(app, {}, {'mock': mock_notifier})
+
+    t = Trigger(path='', filters=[], message=Message(text='T'), notify=['mock'])
+    register_routes(app, {'t': t}, {'mock': mock_notifier})
+
+
+def test_register_routes_when_no_notifiers(caplog, mock_notifier):
+    app = FastAPI()
+    trig = Trigger(path='/webhook/nonotify', filters=[], message=Message(text='T'), notify=[])
+    with caplog.at_level(logging.WARNING):
+        register_routes(app, {'t': trig}, {'mock': mock_notifier})
+
+    assert any('has no notifiers' in r.message for r in caplog.records)
+
+    routes = [route.path for route in app.routes]
+    assert '/webhook/nonotify' in routes
+
+
+@pytest.mark.asyncio
+async def test_skip_notifier_exception_logged():
+    trig = Trigger(
+        path='/webhook/skip',
+        filters=[Filter(field='type', equals='push')],
+        message=Message(text='T'),
+        notify=['mock']
+    )
+
+    mock_notifier = AsyncMock()
+
+    async def raise_skip(message):
+        raise Exception('skip fail')
+
+    mock_notifier.skip = AsyncMock(side_effect=raise_skip)
+    endpoint = create_endpoint('skip', trig, {'mock': mock_notifier})
+    resp = await endpoint({'type': 'other'})
+    assert resp.status_code == 200
+
+
+def test_register_routes_handles_add_api_route_error():
+    class BadApp:
+        def __init__(self):
+            self.routes = []
+
+        def add_api_route(self, *args, **kwargs):
+            raise Exception('boom')
+
+    app = BadApp()
+    trig = Trigger(path='/p', filters=[], message=Message(text='T'), notify=['mock'])
+    register_routes(app, {'t': trig}, {'mock': AsyncMock()})
+
+
+@pytest.mark.asyncio
+async def test_message_format_generic_exception():
+    class BadFormat:
+        def format(self, **kwargs):
+            raise Exception('format error')
+
+    trig = Trigger(path='/m', filters=[], message=Message(text='T'), notify=['mock'])
+    trig.message.text = BadFormat()
+    endpoint = create_endpoint('m', trig, {'mock': AsyncMock()})
+
+    resp = await endpoint({'a': 1})
+    assert resp.status_code == 400

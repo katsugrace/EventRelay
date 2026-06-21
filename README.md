@@ -22,6 +22,7 @@ pip install -r requirements.txt
    HOST=127.0.0.1
    PORT=8000
    TELEGRAM_API=your_telegram_bot_token
+   GITLAB_WEBHOOK_SECRET=your_gitlab_webhook_secret
    ```
 
 2. Launch the app:

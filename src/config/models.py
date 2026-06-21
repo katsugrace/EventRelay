@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 
 class Filter(BaseModel):
     field: str
-    equals: Optional[str] = None
+    model_config = ConfigDict(extra='allow')
 
 
 class Message(BaseModel):

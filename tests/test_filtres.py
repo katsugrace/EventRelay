@@ -26,6 +26,7 @@ class DummyTrigger:
 
         ({'field': 'tags', 'in': ['python', 'pytest']}, {'tags': 'python'}, True),
         ({'field': 'tags', 'in': ['python', 'pytest']}, {'tags': 'java'}, False),
+        ({'field': 'tags', 'in': ['python', 'pytest']}, {'tags': ['java', 'python']}, True),
 
         ({'field': 'email', 'exists': True}, {'email': 'test@test.com'}, True),
         ({'field': 'email', 'exists': True}, {}, False),

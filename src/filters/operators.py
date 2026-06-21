@@ -26,7 +26,11 @@ class InFilter(BaseFilter):
         self.values = values
 
     def check(self, data: dict) -> bool:
-        return self.get_value(data) in self.values
+        val = self.get_value(data)
+        if isinstance(val, (list, tuple, set)):
+            return any(item in self.values for item in val)
+
+        return val in self.values
 
 
 class ExistsFilter(BaseFilter):

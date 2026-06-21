@@ -2,6 +2,10 @@ import pytest
 from src.config.loader import Config
 
 VALID_YAML = '''
+auths:
+  test:
+    type: mock
+
 notifiers:
   test:
     type: mock
@@ -54,6 +58,9 @@ def test_load_valid_config(valid_config_file):
     notifiers = cfg.get_notifiers()
     assert 'test' in notifiers
     assert notifiers['test'].type == 'mock'
+    auths = cfg.get_auths()
+    assert 'test' in auths
+    assert auths['test'].type == 'mock'
 
 
 def test_path_index(valid_config_file):

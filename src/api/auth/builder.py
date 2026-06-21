@@ -9,7 +9,7 @@ def build_auths(
     for name, cfg in auths_config.items():
         result[name] = AuthFactory.create(
             cfg.type,
-            **cfg.dict(exclude={'type'})
+            **cfg.model_dump(exclude={'type'})
         )
 
     return result

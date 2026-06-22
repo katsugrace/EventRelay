@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict
 
-from src.config.models import AppConfig, Trigger, NotifierConfig, AuthConfig
+from src.config.models import AppConfig, Trigger, NotifierConfig, AuthConfig, HelpConfig
 
 logger = logging.getLogger(__name__)
 
@@ -64,3 +64,6 @@ class Config:
 
     def get_auths(self) -> Dict[str, AuthConfig]:
         return self._config.auths
+
+    def get_helps(self) -> HelpConfig:
+        return self._config.helps

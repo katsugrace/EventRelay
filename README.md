@@ -38,15 +38,33 @@ The project configuration is stored in a YAML file (by default `config/triggers.
 
 ### Configuration Structure
 
+#### Status
+This section outlines the supporting features:
+
+```yaml
+helps:
+  status_endpoint: false   # Activate the endpoint getting the status
+```
+
+#### Auths
+This section sets out the authentication rules:
+
+```yaml
+auths:
+  gitlab_main:
+    type: gitlab_token                 # Authentication type
+    token_env: GITLAB_WEBHOOK_SECRET   # Env variable containing the secret
+```
+
 #### Notifiers
 The section specifies the delivery channels (Telegram, mock, etc.):
 
 ```yaml
 notifiers:
   alerts:
-    type: telegram
-    token_env: TELEGRAM_BOT_TOKEN
-    chat_ids: [123456789]
+    type: telegram                  # Notifier type
+    token_env: TELEGRAM_BOT_TOKEN   # Bot token
+    chat_ids: [123456789]           # The chat ID where notifications are posted
 
   test:
     type: mock  # For testing
@@ -58,14 +76,14 @@ The section defines the rules for handling events:
 ```yaml
 triggers:
   example_trigger:
-    name: Example Trigger                   # Human-readable name
-    active: true                            # Is the trigger active?
-    description: Example of a trigger for event handling
-    path: /webhooks/example                 # API endpoint path
-    methods: [POST]                         # HTTP methods
-    tags: [Example]                         # Tags for API documentation
+    name: Example Trigger                                  # Human-readable name
+    active: true                                           # Is the trigger active?
+    description: Example of a trigger for event handling   # Description
+    path: /webhooks/example                                # API endpoint path
+    methods: [POST]                                        # HTTP methods
+    tags: [Example]                                        # Tags for API documentation
 
-    filters:                                # Trigger conditions
+    filters:                                               # Trigger conditions
       - field: event_type
         equals: push
       - field: repository.name

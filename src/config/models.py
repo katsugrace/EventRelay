@@ -34,7 +34,12 @@ class Trigger(BaseModel):
     auth: Optional[str] = None
 
 
+class HelpConfig(BaseModel):
+    status_endpoint: Optional[bool] = False
+
+
 class AppConfig(BaseModel):
     notifiers: Dict[str, NotifierConfig]
     triggers: Dict[str, Trigger]
     auths: Optional[Dict[str, AuthConfig]] = {}
+    helps: HelpConfig = {}

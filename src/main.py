@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from src.config.loader import Config
 from src.env import EnvConfig
 from src.api.routes import register_routes
+from src.api.status import register_status_routes
 from src.notifiers.builder import build_notifiers
 from src.api.auth.builder import build_auths
 
@@ -77,6 +78,14 @@ try:
         notifiers=notifiers,
         auths=auths
     )
+
+    if config.get_helps().status_endpoint:
+        register_status_routes(
+            app=app,
+            triggers=triggers,
+            notifiers=notifiers,
+            auths=auths
+        )
 except FileNotFoundError as e:
     logger.error(f'Configuration file error: {e}')
     sys.exit(1)

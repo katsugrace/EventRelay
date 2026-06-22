@@ -1,3 +1,6 @@
+helps:
+  status_endpoint: true
+
 auths:
   gitlab_main:
     type: gitlab_token

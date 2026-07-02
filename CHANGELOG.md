@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 
 ### Security
 
-## [0.1.0] - 2026-07-07
+## [0.1.0] - 2026-07-02
 
 ### Added
 - Initial release of EventRelay
